@@ -26,6 +26,7 @@ mongoose.connect(MONGODB_URI)
 // Doubt Schema
 const doubtSchema = new mongoose.Schema({
     studentName: String,
+    school: String,
     subject: String,
     imagePath: String,
     createdAt: { type: Date, default: Date.now }
@@ -48,9 +49,10 @@ const upload = multer({ storage: storage });
 // API Endpoints
 app.post('/api/doubts', upload.single('image'), async (req, res) => {
     try {
-        const { studentName, subject } = req.body;
+        const { studentName, school, subject } = req.body;
         const doubt = new Doubt({
             studentName,
+            school,
             subject,
             imagePath: req.file ? `/uploads/${req.file.filename}` : ''
         });
@@ -63,7 +65,12 @@ app.post('/api/doubts', upload.single('image'), async (req, res) => {
 
 app.get('/api/doubts', async (req, res) => {
     try {
-        const doubts = await Doubt.find().sort({ createdAt: -1 });
+        const { school, subject } = req.query;
+        let query = {};
+        if (school) query.school = school;
+        if (subject) query.subject = subject;
+
+        const doubts = await Doubt.find(query).sort({ createdAt: -1 });
         res.json(doubts);
     } catch (err) {
         res.status(500).json({ error: err.message });

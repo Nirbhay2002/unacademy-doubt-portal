@@ -1,25 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import StudentView from './components/StudentView';
 import AdminDashboard from './components/AdminDashboard';
 import ImageModal from './components/ImageModal';
-import { fetchDoubts } from './utils';
 
 function App() {
     const [view, setView] = useState('student');
-    const [doubts, setDoubts] = useState([]);
     const [selectedImg, setSelectedImg] = useState(null);
-
-    useEffect(() => {
-        if (view === 'admin') {
-            loadDoubts();
-        }
-    }, [view]);
-
-    const loadDoubts = async () => {
-        const data = await fetchDoubts();
-        setDoubts(data);
-    };
 
     return (
         <div className="container">
@@ -30,7 +17,6 @@ function App() {
                     <StudentView />
                 ) : (
                     <AdminDashboard
-                        doubts={doubts}
                         onZoom={setSelectedImg}
                     />
                 )}

@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { submitDoubt } from '../utils';
 
+const SCHOOLS = ['School A', 'School B', 'School C'];
+const SUBJECTS = ['Mathematics', 'Science', 'English', 'History', 'Geography', 'Physics', 'Chemistry', 'Biology'];
+
 const StudentView = () => {
-    const [formData, setFormData] = useState({ studentName: '', subject: '' });
+    const [formData, setFormData] = useState({
+        studentName: '',
+        school: '',
+        subject: ''
+    });
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.school) return alert('Please select your school');
         if (!file) return alert('Please upload an image');
 
         setLoading(true);
@@ -16,7 +24,7 @@ const StudentView = () => {
 
         if (success) {
             alert('Doubt submitted successfully!');
-            setFormData({ studentName: '', subject: '' });
+            setFormData({ studentName: '', school: '', subject: '' });
             setFile(null);
             e.target.reset();
         } else {
@@ -39,14 +47,30 @@ const StudentView = () => {
                     />
                 </div>
                 <div className="form-group">
+                    <label>School</label>
+                    <select
+                        value={formData.school}
+                        onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                        required
+                    >
+                        <option value="">Select School</option>
+                        {SCHOOLS.map(school => (
+                            <option key={school} value={school}>{school}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group">
                     <label>Subject</label>
-                    <input
-                        type="text"
+                    <select
                         value={formData.subject}
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        placeholder="e.g. Mathematics"
                         required
-                    />
+                    >
+                        <option value="">Select Subject</option>
+                        {SUBJECTS.map(subject => (
+                            <option key={subject} value={subject}>{subject}</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="form-group">
                     <label>Doubt Image</label>
