@@ -1,35 +1,81 @@
 import React from 'react';
+import {
+    Card,
+    CardMedia,
+    CardContent,
+    CardActions,
+    Typography,
+    Button,
+    Box,
+    IconButton,
+    Tooltip
+} from '@mui/material';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import DownloadIcon from '@mui/icons-material/Download';
 import { downloadImage } from '../utils';
 
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE || 'http://localhost:5000';
 
 const DoubtCard = ({ doubt, onZoom }) => {
     return (
-        <div className="doubt-card">
-            <div className="img-container" onClick={() => onZoom(`${SERVER_BASE}${doubt.imagePath}`)}>
-                <img src={`${SERVER_BASE}${doubt.imagePath}`} alt="Doubt" />
-                <div className="img-overlay">Click to view</div>
-            </div>
-            <div className="doubt-info">
-                <h3>{doubt.subject}</h3>
-                <p>By {doubt.studentName}</p>
-                <div className="card-actions">
-                    <p style={{ fontSize: '0.75rem' }}>
-                        {new Date(doubt.createdAt).toLocaleString()}
-                    </p>
-                    <button
-                        className="download-btn"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            downloadImage(doubt.imagePath, `${doubt.studentName}-${doubt.subject}.jpg`);
-                        }}
-                    >
-                        Download
-                    </button>
-                </div>
-            </div>
-        </div>
+        <Card elevation={0} variant="outlined" sx={{ height: '100%', minWidth: '400px', maxWidth: '100%', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
+            <Box sx={{ position: 'relative', pt: '60%', cursor: 'pointer', backgroundColor: '#f0f2f5' }} onClick={() => onZoom(`${SERVER_BASE}${doubt.imagePath}`)}>
+                <CardMedia
+                    component="img"
+                    image={`${SERVER_BASE}${doubt.imagePath}`}
+                    alt="Doubt Image"
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        height: '100%',
+                    }}
+                />
+                <Box className="img-overlay"
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.3)',
+                        opacity: 0,
+                        transition: 'opacity 0.2s',
+                        '&:hover': { opacity: 1 },
+                        color: '#fff'
+                    }}>
+                    <ZoomInIcon sx={{ fontSize: 40 }} />
+                </Box>
+            </Box>
+            <CardContent sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" component="div" gutterBottom sx={{ fontWeight: 600 }}>
+                    {doubt.subject}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    By {doubt.studentName}
+                </Typography>
+                <Typography variant="caption" display="block" color="text.disabled" sx={{ mt: 1 }}>
+                    {new Date(doubt.createdAt).toLocaleString()}
+                </Typography>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>
+                <Button
+                    variant="contained"
+                    disableElevation
+                    size="small"
+                    startIcon={<DownloadIcon />}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        downloadImage(doubt.imagePath, `${doubt.studentName}-${doubt.subject}.jpg`);
+                    }}
+                >
+                    Download
+                </Button>
+            </CardActions>
+        </Card>
     );
 };
 

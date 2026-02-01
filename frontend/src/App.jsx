@@ -4,15 +4,17 @@ import StudentView from './components/StudentView';
 import AdminDashboard from './components/AdminDashboard';
 import ImageModal from './components/ImageModal';
 
+import { Box } from '@mui/material';
+
 function App() {
     const [view, setView] = useState('student');
     const [selectedImg, setSelectedImg] = useState(null);
 
     return (
-        <div className="container">
+        <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
             <Navbar view={view} setView={setView} />
 
-            <main>
+            <Box component="main">
                 {view === 'student' ? (
                     <StudentView />
                 ) : (
@@ -20,13 +22,13 @@ function App() {
                         onZoom={setSelectedImg}
                     />
                 )}
-            </main>
+            </Box>
 
             <ImageModal
                 imageUrl={selectedImg}
                 onClose={() => setSelectedImg(null)}
             />
-        </div>
+        </Box>
     );
 }
 

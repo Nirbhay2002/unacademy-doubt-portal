@@ -1,232 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-
-:root {
-  --primary: #2563eb;
-  --bg: #f8fafc;
-  --text: #1e293b;
-  --card: #ffffff;
-  --border: #e2e8f0;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f4f6f8;
 }
 
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 2rem;
+#app {
+  min-height: 100vh;
 }
 
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2.5rem;
+/* Custom scrollbar for better aesthetics */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-nav h1 {
-  font-weight: 600;
-  font-size: 1.5rem;
-  color: var(--primary);
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
-.nav-links button {
-  background: none;
-  border: none;
-  font-family: inherit;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-left: 1.5rem;
-  color: #64748b;
-  transition: color 0.2s;
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
 }
 
-.nav-links button.active {
-  color: var(--primary);
-  font-weight: 500;
-}
-
-/* Form Styles */
-.card {
-  background: var(--card);
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  border: 1px solid var(--border);
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-}
-
-input[type="text"],
-input[type="file"] {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-family: inherit;
-}
-
-button.submit-btn {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-button.submit-btn:hover {
-  opacity: 0.9;
-}
-
-/* Grid Styles */
-.doubts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-.doubt-card {
-  background: var(--card);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  transition: transform 0.2s;
-}
-
-.doubt-card:hover {
-  transform: translateY(-4px);
-}
-
-/* Image Grid & Actions */
-.img-container {
-    position: relative;
-    cursor: zoom-in;
-    overflow: hidden;
-    height: 250px;
-}
-
-.img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.img-container:hover img {
-    transform: scale(1.05);
-}
-
-.img-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.3);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    font-weight: 500;
-}
-
-.img-container:hover .img-overlay {
-    opacity: 1;
-}
-
-.card-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
-}
-
-.download-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.download-btn:hover {
-    opacity: 0.9;
-}
-
-/* Modal */
-.modal {
-    display: flex;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.9);
-    align-items: center;
-    justify-content: center;
-    cursor: zoom-out;
-}
-
-.modal-content {
-    max-width: 90%;
-    max-height: 90%;
-    position: relative;
-}
-
-.modal-content img {
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 90vh;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
-}
-
-.close {
-    position: absolute;
-    top: -40px;
-    right: 0;
-    color: white;
-    font-size: 35px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem;
-  color: #64748b;
+::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }

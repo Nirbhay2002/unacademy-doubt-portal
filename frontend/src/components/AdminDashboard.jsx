@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import {
+    Container,
+    Grid,
+    Typography,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Paper,
+    Box,
+    CircularProgress
+} from '@mui/material';
 import DoubtCard from './DoubtCard';
 import { fetchDoubts } from '../utils';
 
@@ -11,19 +23,17 @@ const AdminDashboard = ({ onZoom }) => {
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Fetch unique subjects for the selected school
     useEffect(() => {
         if (selectedSchool) {
             loadAvailableSubjects();
-            setSelectedSubject(''); // Reset subject when school changes
-            setDoubts([]); // Clear doubts when school changes
+            setSelectedSubject('');
+            setDoubts([]);
         } else {
             setAvailableSubjects([]);
             setDoubts([]);
         }
     }, [selectedSchool]);
 
-    // Fetch doubts when both are selected
     useEffect(() => {
         if (selectedSchool && selectedSubject) {
             loadFilteredDoubts();
@@ -33,7 +43,6 @@ const AdminDashboard = ({ onZoom }) => {
     }, [selectedSchool, selectedSubject]);
 
     const loadAvailableSubjects = async () => {
-        // We can fetch all doubts for the school to find unique subjects
         const data = await fetchDoubts({ school: selectedSchool });
         const subjects = [...new Set(data.map(d => d.subject))];
         setAvailableSubjects(subjects);
@@ -47,72 +56,85 @@ const AdminDashboard = ({ onZoom }) => {
     };
 
     return (
-        <div className="admin-container">
-            <div className="filter-bar card" style={{ marginBottom: '2rem', padding: '1.5rem' }}>
-                <h3>Filter Doubts</h3>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                    <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                        <label>Select School</label>
-                        <select
-                            value={selectedSchool}
-                            onChange={(e) => setSelectedSchool(e.target.value)}
-                        >
-                            <option value="">-- Select School --</option>
-                            {SCHOOLS.map(school => (
-                                <option key={school} value={school}>{school}</option>
-                            ))}
-                        </select>
-                    </div>
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+            <Paper elevation={0} variant="outlined" sx={{ p: 4, mb: 4 }}>
+                <Typography variant="h5"
+                    sx={{ fontWeight: 600, mb: 3 }}>
+                    Filter Doubts
+                </Typography>
+                <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                        <FormControl fullWidth sx={{ minWidth: 250 }}>
+                            <InputLabel id="school-select-label">Select School</InputLabel>
+                            <Select
+                                labelId="school-select-label"
+                                value={selectedSchool}
+                                label="Select School"
+                                onChange={(e) => setSelectedSchool(e.target.value)}
+                            >
+                                <MenuItem value=""><em>-- Select School --</em></MenuItem>
+                                {SCHOOLS.map(school => (
+                                    <MenuItem key={school} value={school}>{school}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </Grid>
 
                     {selectedSchool && (
-                        <div className="form-group" style={{ flex: 1, marginBottom: 0 }}>
-                            <label>Select Subject</label>
-                            <select
-                                value={selectedSubject}
-                                onChange={(e) => setSelectedSubject(e.target.value)}
-                            >
-                                <option value="">-- Select Subject --</option>
-                                {availableSubjects.length > 0 ? (
-                                    availableSubjects.map(sub => (
-                                        <option key={sub} value={sub}>{sub}</option>
-                                    ))
-                                ) : (
-                                    <option disabled>No doubts found for this school</option>
-                                )}
-                            </select>
-                        </div>
+                        <Grid item xs={12}>
+                            <FormControl fullWidth sx={{ minWidth: 250 }}>
+                                <InputLabel>Select Subject</InputLabel>
+                                <Select
+                                    value={selectedSubject}
+                                    label="Select Subject"
+                                    onChange={(e) => setSelectedSubject(e.target.value)}
+                                >
+                                    <MenuItem value="">-- Select Subject --</MenuItem>
+                                    {availableSubjects.map(sub => (
+                                        <MenuItem key={sub} value={sub}>{sub}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
                     )}
-                </div>
-            </div>
+                </Grid>
+            </Paper>
 
-            <main>
+            <Box sx={{ minHeight: '300px' }}>
                 {(!selectedSchool || !selectedSubject) ? (
-                    <div className="empty-state">
-                        <p>Please select a school and a subject to view doubt images.</p>
-                    </div>
+                    <Paper elevation={0} variant="outlined" sx={{ py: 10, textAlign: 'center', backgroundColor: '#fafafa' }}>
+                        <Typography color="text.secondary">
+                            Please select a school and a subject to view doubt images.
+                        </Typography>
+                    </Paper>
                 ) : loading ? (
-                    <div className="empty-state">
-                        <p>Loading doubts...</p>
-                    </div>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+                        <CircularProgress />
+                    </Box>
                 ) : (
-                    <div className="doubts-grid">
+                    <Grid container spacing={3}>
                         {doubts.length === 0 ? (
-                            <div className="empty-state">
-                                <p>No doubts found for the selected filters.</p>
-                            </div>
+                            <Grid item xs={12}>
+                                <Paper elevation={0} variant="outlined" sx={{ py: 10, textAlign: 'center' }}>
+                                    <Typography color="text.secondary">
+                                        No doubts found for the selected filters.
+                                    </Typography>
+                                </Paper>
+                            </Grid>
                         ) : (
                             doubts.map((doubt) => (
-                                <DoubtCard
-                                    key={doubt._id}
-                                    doubt={doubt}
-                                    onZoom={onZoom}
-                                />
+                                <Grid item xs={12} md={6} key={doubt._id}>
+                                    <DoubtCard
+                                        doubt={doubt}
+                                        onZoom={onZoom}
+                                    />
+                                </Grid>
                             ))
                         )}
-                    </div>
+                    </Grid>
                 )}
-            </main>
-        </div>
+            </Box>
+        </Container>
     );
 };
 

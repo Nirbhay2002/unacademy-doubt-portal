@@ -1,4 +1,18 @@
 import React, { useState } from 'react';
+import {
+    Container,
+    Paper,
+    Typography,
+    TextField,
+    Select,
+    MenuItem,
+    Button,
+    FormControl,
+    InputLabel,
+    Box,
+    CircularProgress
+} from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { submitDoubt } from '../utils';
 
 const SCHOOLS = ['School A', 'School B', 'School C'];
@@ -33,59 +47,77 @@ const StudentView = () => {
     };
 
     return (
-        <div className="card">
-            <h2>Ask a Doubt</h2>
-            <form onSubmit={handleSubmit} style={{ marginTop: '1.5rem' }}>
-                <div className="form-group">
-                    <label>Your Name</label>
-                    <input
-                        type="text"
-                        value={formData.studentName}
-                        onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                        placeholder="Enter name"
-                        required
-                    />
-                </div>
-                <div className="form-group">
-                    <label>School</label>
-                    <select
-                        value={formData.school}
-                        onChange={(e) => setFormData({ ...formData, school: e.target.value })}
-                        required
-                    >
-                        <option value="">Select School</option>
-                        {SCHOOLS.map(school => (
-                            <option key={school} value={school}>{school}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label>Subject</label>
-                    <select
-                        value={formData.subject}
-                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        required
-                    >
-                        <option value="">Select Subject</option>
-                        {SUBJECTS.map(subject => (
-                            <option key={subject} value={subject}>{subject}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label>Doubt Image</label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setFile(e.target.files[0])}
-                        required
-                    />
-                </div>
-                <button type="submit" className="submit-btn" disabled={loading}>
-                    {loading ? 'Uploading...' : 'Submit Doubt'}
-                </button>
-            </form>
-        </div>
+        <Container maxWidth="sm" sx={{ py: 6 }}>
+            <Paper elevation={0} variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
+                    Ask a Doubt
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <TextField
+                            fullWidth
+                            label="Your Name"
+                            value={formData.studentName}
+                            onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
+                            required
+                        />
+
+                        <FormControl fullWidth required>
+                            <InputLabel>School</InputLabel>
+                            <Select
+                                value={formData.school}
+                                label="School"
+                                onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                            >
+                                <option value="" hidden />
+                                {SCHOOLS.map(school => (
+                                    <MenuItem key={school} value={school}>{school}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <FormControl fullWidth required>
+                            <InputLabel>Subject</InputLabel>
+                            <Select
+                                value={formData.subject}
+                                label="Subject"
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            >
+                                <option value="" hidden />
+                                {SUBJECTS.map(subject => (
+                                    <MenuItem key={subject} value={subject}>{subject}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <Button
+                            component="label"
+                            variant="outlined"
+                            startIcon={<CloudUploadIcon />}
+                            sx={{ py: 1.5 }}
+                        >
+                            {file ? file.name : 'Upload Doubt Image'}
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                onChange={(e) => setFile(e.target.files[0])}
+                            />
+                        </Button>
+
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            size="large"
+                            disabled={loading}
+                            sx={{ mt: 2, py: 1.5 }}
+                        >
+                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit Doubt'}
+                        </Button>
+                    </Box>
+                </form>
+            </Paper>
+        </Container>
     );
 };
 
