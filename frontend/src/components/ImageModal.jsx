@@ -21,10 +21,12 @@ const ImageModal = ({ imageUrl, onClose }) => {
                     onClick={onClose}
                     sx={{
                         position: 'absolute',
-                        right: -40,
-                        top: -40,
-                        color: '#fff',
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                        right: { xs: 10, sm: -40 },
+                        top: { xs: 10, sm: -40 },
+                        color: { xs: '#000', sm: '#fff' },
+                        backgroundColor: { xs: 'rgba(255,255,255,0.7)', sm: 'transparent' },
+                        '&:hover': { backgroundColor: { xs: 'rgba(255,255,255,0.9)', sm: 'rgba(255,255,255,0.1)' } },
+                        zIndex: 1
                     }}
                 >
                     <CloseIcon />

@@ -47,10 +47,10 @@ const StudentView = () => {
     };
 
     return (
-        <Container maxWidth="sm" sx={{ py: 6 }}>
-            <Paper elevation={0} variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-                    Ask a Doubt
+        <Container maxWidth="sm" sx={{ py: { xs: 4, md: 6 } }}>
+            <Paper elevation={0} variant="outlined" sx={{ p: { xs: 3, sm: 4 }, textAlign: 'center' }}>
+                <Typography variant="h4" gutterBottom sx={{ mb: { xs: 3, sm: 4 }, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
+                    <span style={{ color: '#1976d2' }}>Got a</span> <span style={{ color: '#00c07aff' }}>Question?</span>
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>

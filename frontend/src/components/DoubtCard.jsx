@@ -18,7 +18,7 @@ const SERVER_BASE = import.meta.env.VITE_SERVER_BASE || 'http://localhost:5000';
 
 const DoubtCard = ({ doubt, onZoom }) => {
     return (
-        <Card elevation={0} variant="outlined" sx={{ height: '100%', minWidth: '400px', maxWidth: '100%', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
+        <Card elevation={0} variant="outlined" sx={{ height: '100%', width: '100%', maxWidth: '400px', mx: 'auto', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
             <Box sx={{ position: 'relative', pt: '60%', cursor: 'pointer', backgroundColor: '#f0f2f5' }} onClick={() => onZoom(`${SERVER_BASE}${doubt.imagePath}`)}>
                 <CardMedia
                     component="img"

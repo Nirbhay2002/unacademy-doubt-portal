@@ -9,8 +9,8 @@ const Navbar = ({ view, setView }) => {
     return (
         <AppBar position="sticky" elevation={0} sx={{ borderBottom: '1px solid #e0e0e0', backgroundColor: '#fff', color: '#000' }}>
             <Container maxWidth="lg">
-                <Toolbar disableGutters>
-                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+                <Toolbar disableGutters sx={{ flexDirection: { xs: 'column', sm: 'row' }, py: { xs: 1, sm: 0 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'center', sm: 'flex-start' }, mb: { xs: 1, sm: 0 } }}>
                         <img src="../assets/img/logo.png" alt="Logo" style={{ height: '40px', marginRight: '12px' }} />
                         <Typography
                             variant="h6"
@@ -21,8 +21,16 @@ const Navbar = ({ view, setView }) => {
                             DoubtPortal
                         </Typography>
                     </Box>
-                    <Box>
-                        <Tabs value={view} onChange={handleTabChange} indicatorColor="primary" textColor="primary">
+                    <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: 'center' }}>
+                        <Tabs
+                            value={view}
+                            onChange={handleTabChange}
+                            indicatorColor="primary"
+                            textColor="primary"
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            allowScrollButtonsMobile
+                        >
                             <Tab label="Student View" value="student" sx={{ fontWeight: 600 }} />
                             <Tab label="Admin Dashboard" value="admin" sx={{ fontWeight: 600 }} />
                         </Tabs>

@@ -56,8 +56,8 @@ const AdminDashboard = ({ onZoom }) => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 6 }}>
-            <Paper elevation={0} variant="outlined" sx={{ p: 4, mb: 4 }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
+            <Paper elevation={0} variant="outlined" sx={{ p: { xs: 2, sm: 4 }, mb: 4 }}>
                 <Typography variant="h5"
                     sx={{ fontWeight: 600, mb: 3 }}>
                     Filter Doubts
@@ -112,7 +112,7 @@ const AdminDashboard = ({ onZoom }) => {
                         <CircularProgress />
                     </Box>
                 ) : (
-                    <Grid container spacing={3}>
+                    <Grid container spacing={3} justifyContent="center">
                         {doubts.length === 0 ? (
                             <Grid item xs={12}>
                                 <Paper elevation={0} variant="outlined" sx={{ py: 10, textAlign: 'center' }}>
@@ -123,7 +123,7 @@ const AdminDashboard = ({ onZoom }) => {
                             </Grid>
                         ) : (
                             doubts.map((doubt) => (
-                                <Grid item xs={12} md={6} key={doubt._id}>
+                                <Grid item xs={12} sm={6} md={4} key={doubt._id} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                                     <DoubtCard
                                         doubt={doubt}
                                         onZoom={onZoom}
