@@ -15,8 +15,8 @@ import {
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { submitDoubt } from '../utils';
 
-const SCHOOLS = ['School A', 'School B', 'School C'];
-const SUBJECTS = ['Mathematics', 'Science', 'English', 'History', 'Geography', 'Physics', 'Chemistry', 'Biology'];
+const SCHOOLS = ['Unacademy, Chandigarh'];
+const SUBJECTS = ['Chemistry', 'Mathematics', 'Physics', 'Botany', 'Zoology'];
 
 const StudentView = () => {
     const [formData, setFormData] = useState({

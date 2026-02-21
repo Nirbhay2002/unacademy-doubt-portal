@@ -14,7 +14,7 @@ import {
 import DoubtCard from './DoubtCard';
 import { fetchDoubts } from '../utils';
 
-const SCHOOLS = ['School A', 'School B', 'School C'];
+const SCHOOLS = ['Unacademy, Chandigarh'];
 
 const AdminDashboard = ({ onZoom }) => {
     const [doubts, setDoubts] = useState([]);
