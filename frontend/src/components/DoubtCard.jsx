@@ -8,17 +8,26 @@ import {
     Button,
     Box,
     IconButton,
-    Tooltip
+    Tooltip,
+    Checkbox
 } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import DownloadIcon from '@mui/icons-material/Download';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { downloadImage } from '../utils';
 
 const SERVER_BASE = import.meta.env.VITE_SERVER_BASE || 'http://localhost:5000';
 
-const DoubtCard = ({ doubt, onZoom }) => {
+const DoubtCard = ({ doubt, onZoom, onDelete, onSelect, isSelected }) => {
     return (
-        <Card elevation={0} variant="outlined" sx={{ height: '100%', width: '100%', maxWidth: '400px', mx: 'auto', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}>
+        <Card elevation={0} variant="outlined" sx={{ position: 'relative', height: '100%', width: '100%', maxWidth: '400px', mx: 'auto', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }, border: isSelected ? '2px solid #1976d2' : '1px solid rgba(0, 0, 0, 0.12)' }}>
+            <Box sx={{ position: 'absolute', top: 8, left: 8, zIndex: 1, backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: '4px' }}>
+                <Checkbox
+                    checked={isSelected}
+                    onChange={(e) => onSelect(doubt._id, e.target.checked)}
+                    color="primary"
+                />
+            </Box>
             <Box sx={{ position: 'relative', pt: '60%', cursor: 'pointer', backgroundColor: '#f0f2f5' }} onClick={() => onZoom(`${SERVER_BASE}${doubt.imagePath}`)}>
                 <CardMedia
                     component="img"
@@ -61,7 +70,17 @@ const DoubtCard = ({ doubt, onZoom }) => {
                     {new Date(doubt.createdAt).toLocaleString()}
                 </Typography>
             </CardContent>
-            <CardActions sx={{ justifyContent: 'flex-end', px: 2, pb: 2 }}>
+            <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                <Tooltip title="Delete Doubt">
+                    <IconButton color="error" onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Are you sure you want to delete this doubt?')) {
+                            onDelete(doubt._id);
+                        }
+                    }}>
+                        <DeleteIcon />
+                    </IconButton>
+                </Tooltip>
                 <Button
                     variant="contained"
                     disableElevation

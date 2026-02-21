@@ -146,6 +146,54 @@ app.get('/api/doubts', authMiddleware, async (req, res) => {
     }
 });
 
+// Delete Single Doubt
+app.delete('/api/doubts/:id', authMiddleware, async (req, res) => {
+    try {
+        const doubt = await Doubt.findById(req.params.id);
+        if (!doubt) {
+            return res.status(404).json({ error: 'Doubt not found' });
+        }
+
+        if (doubt.imagePath) {
+            const filePath = path.join(__dirname, doubt.imagePath);
+            fs.unlink(filePath, (err) => {
+                if (err && err.code !== 'ENOENT') console.error('Error deleting image file:', err);
+            });
+        }
+
+        await Doubt.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Doubt deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Bulk Delete Doubts
+app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
+    try {
+        const { ids } = req.body;
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.status(400).json({ error: 'Invalid or empty array of IDs provided.' });
+        }
+
+        const doubtsToDelete = await Doubt.find({ _id: { $in: ids } });
+
+        doubtsToDelete.forEach(doubt => {
+            if (doubt.imagePath) {
+                const filePath = path.join(__dirname, doubt.imagePath);
+                fs.unlink(filePath, (err) => {
+                    if (err && err.code !== 'ENOENT') console.error('Error deleting image file:', err);
+                });
+            }
+        });
+
+        const result = await Doubt.deleteMany({ _id: { $in: ids } });
+        res.json({ message: `Successfully deleted ${result.deletedCount} doubts` });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

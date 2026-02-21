@@ -34,8 +34,8 @@ const Navbar = ({ view, setView, isAuthenticated, onLogout, user }) => {
                                     allowScrollButtonsMobile
                                     sx={{ mr: 2 }}
                                 >
-                                    <Tab label="Student View" value="student" sx={{ fontWeight: 600 }} />
-                                    <Tab label="Admin Dashboard" value="admin" sx={{ fontWeight: 600 }} />
+                                    <Tab label="Submit Doubt" value="student" sx={{ fontWeight: 600 }} />
+                                    <Tab label="View Doubts" value="admin" sx={{ fontWeight: 600 }} />
                                 </Tabs>
                                 <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}>
                                     Role: {user?.rollNumber}

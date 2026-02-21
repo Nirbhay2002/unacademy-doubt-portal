@@ -90,3 +90,37 @@ export const login = async (rollNumber, password) => {
         return { success: false, error: err.message };
     }
 };
+
+export const deleteDoubt = async (id) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/doubts/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.ok;
+    } catch (err) {
+        console.error('Error deleting doubt:', err);
+        return false;
+    }
+};
+
+export const bulkDeleteDoubts = async (ids) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/doubts/bulk-delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ ids })
+        });
+        return response.ok;
+    } catch (err) {
+        console.error('Error bulk deleting doubts:', err);
+        return false;
+    }
+};

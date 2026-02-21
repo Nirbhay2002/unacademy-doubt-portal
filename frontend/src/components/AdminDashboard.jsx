@@ -9,10 +9,14 @@ import {
     MenuItem,
     Paper,
     Box,
-    CircularProgress
+    CircularProgress,
+    Button,
+    Checkbox,
+    FormControlLabel
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import DoubtCard from './DoubtCard';
-import { fetchDoubts } from '../utils';
+import { fetchDoubts, deleteDoubt, bulkDeleteDoubts } from '../utils';
 
 const SCHOOLS = ['Unacademy, Chandigarh'];
 
@@ -22,23 +26,28 @@ const AdminDashboard = ({ onZoom }) => {
     const [selectedSubject, setSelectedSubject] = useState('');
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedDoubts, setSelectedDoubts] = useState([]);
 
     useEffect(() => {
         if (selectedSchool) {
             loadAvailableSubjects();
             setSelectedSubject('');
             setDoubts([]);
+            setSelectedDoubts([]);
         } else {
             setAvailableSubjects([]);
             setDoubts([]);
+            setSelectedDoubts([]);
         }
     }, [selectedSchool]);
 
     useEffect(() => {
         if (selectedSchool && selectedSubject) {
             loadFilteredDoubts();
+            setSelectedDoubts([]);
         } else {
             setDoubts([]);
+            setSelectedDoubts([]);
         }
     }, [selectedSchool, selectedSubject]);
 
@@ -52,7 +61,46 @@ const AdminDashboard = ({ onZoom }) => {
         setLoading(true);
         const data = await fetchDoubts({ school: selectedSchool, subject: selectedSubject });
         setDoubts(data);
+        setSelectedDoubts([]);
         setLoading(false);
+    };
+
+    const handleDelete = async (id) => {
+        const success = await deleteDoubt(id);
+        if (success) {
+            loadFilteredDoubts();
+        } else {
+            alert('Failed to delete doubt.');
+        }
+    };
+
+    const handleSelect = (id, isSelected) => {
+        if (isSelected) {
+            setSelectedDoubts(prev => [...prev, id]);
+        } else {
+            setSelectedDoubts(prev => prev.filter(doubtId => doubtId !== id));
+        }
+    };
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedDoubts(doubts.map(d => d._id));
+        } else {
+            setSelectedDoubts([]);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (window.confirm(`Are you sure you want to delete ${selectedDoubts.length} doubts?`)) {
+            setLoading(true);
+            const success = await bulkDeleteDoubts(selectedDoubts);
+            if (success) {
+                loadFilteredDoubts();
+            } else {
+                alert('Failed to delete selected doubts.');
+                setLoading(false);
+            }
+        }
     };
 
     return (
@@ -112,26 +160,56 @@ const AdminDashboard = ({ onZoom }) => {
                         <CircularProgress />
                     </Box>
                 ) : (
-                    <Grid container spacing={3} justifyContent="center">
-                        {doubts.length === 0 ? (
-                            <Grid item xs={12}>
-                                <Paper elevation={0} variant="outlined" sx={{ py: 10, textAlign: 'center' }}>
-                                    <Typography color="text.secondary">
-                                        No doubts found for the selected filters.
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                        ) : (
-                            doubts.map((doubt) => (
-                                <Grid item xs={12} sm={6} md={4} key={doubt._id} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                                    <DoubtCard
-                                        doubt={doubt}
-                                        onZoom={onZoom}
-                                    />
-                                </Grid>
-                            ))
+                    <>
+                        {doubts.length > 0 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 1 }}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={selectedDoubts.length === doubts.length && doubts.length > 0}
+                                            indeterminate={selectedDoubts.length > 0 && selectedDoubts.length < doubts.length}
+                                            onChange={handleSelectAll}
+                                            color="primary"
+                                        />
+                                    }
+                                    label="Select All"
+                                />
+                                {selectedDoubts.length > 0 && (
+                                    <Button
+                                        variant="contained"
+                                        color="error"
+                                        startIcon={<DeleteIcon />}
+                                        onClick={handleBulkDelete}
+                                    >
+                                        Delete Selected ({selectedDoubts.length})
+                                    </Button>
+                                )}
+                            </Box>
                         )}
-                    </Grid>
+                        <Grid container spacing={3} justifyContent="center">
+                            {doubts.length === 0 ? (
+                                <Grid item xs={12}>
+                                    <Paper elevation={0} variant="outlined" sx={{ py: 10, textAlign: 'center' }}>
+                                        <Typography color="text.secondary">
+                                            No doubts found for the selected filters.
+                                        </Typography>
+                                    </Paper>
+                                </Grid>
+                            ) : (
+                                doubts.map((doubt) => (
+                                    <Grid item xs={12} sm={6} md={4} key={doubt._id} sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                                        <DoubtCard
+                                            doubt={doubt}
+                                            onZoom={onZoom}
+                                            onDelete={handleDelete}
+                                            onSelect={handleSelect}
+                                            isSelected={selectedDoubts.includes(doubt._id)}
+                                        />
+                                    </Grid>
+                                ))
+                            )}
+                        </Grid>
+                    </>
                 )}
             </Box>
         </Container>
