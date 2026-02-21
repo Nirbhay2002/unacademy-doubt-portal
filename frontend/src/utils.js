@@ -4,7 +4,15 @@ const SERVER_BASE = import.meta.env.VITE_SERVER_BASE || 'http://localhost:5000';
 export const fetchDoubts = async (filters = {}) => {
     try {
         const queryParams = new URLSearchParams(filters).toString();
-        const response = await fetch(`${API_BASE}/doubts${queryParams ? `?${queryParams}` : ''}`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/doubts${queryParams ? `?${queryParams}` : ''}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         return await response.json();
     } catch (err) {
         console.error('Error fetching doubts:', err);
@@ -20,9 +28,13 @@ export const submitDoubt = async (formData, file) => {
     data.append('image', file);
 
     try {
+        const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/doubts`, {
             method: 'POST',
             body: data,
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
         });
         return response.ok;
     } catch (err) {
@@ -46,5 +58,35 @@ export const downloadImage = async (imagePath, fileName) => {
     } catch (err) {
         console.error('Download failed:', err);
         window.open(`${SERVER_BASE}${imagePath}`, '_blank');
+    }
+};
+
+export const signup = async (rollNumber, password) => {
+    try {
+        const response = await fetch(`${API_BASE}/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rollNumber, password }),
+        });
+        const data = await response.json();
+        if (response.ok) return { success: true, data };
+        return { success: false, error: data.error };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+};
+
+export const login = async (rollNumber, password) => {
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ rollNumber, password }),
+        });
+        const data = await response.json();
+        if (response.ok) return { success: true, data };
+        return { success: false, error: data.error };
+    } catch (err) {
+        return { success: false, error: err.message };
     }
 };

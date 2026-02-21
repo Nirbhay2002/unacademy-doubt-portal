@@ -6,6 +6,8 @@ const path = require('path');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
@@ -22,6 +24,31 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/studen
 mongoose.connect(MONGODB_URI)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.error('MongoDB Connection Error:', err));
+
+// --- Auth Setup ---
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey123';
+const VALID_ROLL_NUMBERS = ['1001', '1002', '1003', '1004', '1005'];
+
+const userSchema = new mongoose.Schema({
+    rollNumber: { type: String, required: true, unique: true },
+    password: { type: String, required: true }
+});
+const User = mongoose.model('User', userSchema);
+
+// Auth Middleware
+const authMiddleware = (req, res, next) => {
+    const token = req.header('Authorization')?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        res.status(400).json({ error: 'Invalid token.' });
+    }
+};
+// ------------------
 
 // Doubt Schema
 const doubtSchema = new mongoose.Schema({
@@ -46,8 +73,50 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// --- Auth Endpoints ---
+app.post('/api/auth/signup', async (req, res) => {
+    try {
+        const { rollNumber, password } = req.body;
+
+        if (!VALID_ROLL_NUMBERS.includes(rollNumber)) {
+            return res.status(400).json({ error: 'Invalid Roll Number. Not allowed to sign up.' });
+        }
+
+        const existingUser = await User.findOne({ rollNumber });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Roll number already registered.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const savedUser = await new User({ rollNumber, password: hashedPassword }).save();
+        res.status(201).json({ message: 'User created successfully', userId: savedUser._id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { rollNumber, password } = req.body;
+        const user = await User.findOne({ rollNumber });
+
+        if (!user) return res.status(400).json({ error: 'Invalid roll number or password.' });
+
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) return res.status(400).json({ error: 'Invalid roll number or password.' });
+
+        const token = jwt.sign({ _id: user._id, rollNumber: user.rollNumber }, JWT_SECRET, { expiresIn: '12h' });
+        res.json({ token, rollNumber: user.rollNumber });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// -----------------------
+
 // API Endpoints
-app.post('/api/doubts', upload.single('image'), async (req, res) => {
+app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res) => {
     try {
         const { studentName, school, subject } = req.body;
         const doubt = new Doubt({
@@ -63,7 +132,7 @@ app.post('/api/doubts', upload.single('image'), async (req, res) => {
     }
 });
 
-app.get('/api/doubts', async (req, res) => {
+app.get('/api/doubts', authMiddleware, async (req, res) => {
     try {
         const { school, subject } = req.query;
         let query = {};

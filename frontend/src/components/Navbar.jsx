@@ -1,7 +1,7 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Tabs, Tab, Container, Box } from '@mui/material';
+import { AppBar, Toolbar, Typography, Tabs, Tab, Container, Box, Button } from '@mui/material';
 
-const Navbar = ({ view, setView }) => {
+const Navbar = ({ view, setView, isAuthenticated, onLogout, user }) => {
     const handleTabChange = (event, newValue) => {
         setView(newValue);
     };
@@ -21,19 +21,30 @@ const Navbar = ({ view, setView }) => {
                             DoubtPortal
                         </Typography>
                     </Box>
-                    <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: 'center' }}>
-                        <Tabs
-                            value={view}
-                            onChange={handleTabChange}
-                            indicatorColor="primary"
-                            textColor="primary"
-                            variant="scrollable"
-                            scrollButtons="auto"
-                            allowScrollButtonsMobile
-                        >
-                            <Tab label="Student View" value="student" sx={{ fontWeight: 600 }} />
-                            <Tab label="Admin Dashboard" value="admin" sx={{ fontWeight: 600 }} />
-                        </Tabs>
+                    <Box sx={{ width: { xs: '100%', sm: 'auto' }, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        {isAuthenticated && (
+                            <>
+                                <Tabs
+                                    value={view}
+                                    onChange={handleTabChange}
+                                    indicatorColor="primary"
+                                    textColor="primary"
+                                    variant="scrollable"
+                                    scrollButtons="auto"
+                                    allowScrollButtonsMobile
+                                    sx={{ mr: 2 }}
+                                >
+                                    <Tab label="Student View" value="student" sx={{ fontWeight: 600 }} />
+                                    <Tab label="Admin Dashboard" value="admin" sx={{ fontWeight: 600 }} />
+                                </Tabs>
+                                <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}>
+                                    Role: {user?.rollNumber}
+                                </Typography>
+                                <Button variant="outlined" color="primary" onClick={onLogout} size="small">
+                                    Logout
+                                </Button>
+                            </>
+                        )}
                     </Box>
                 </Toolbar>
             </Container>
