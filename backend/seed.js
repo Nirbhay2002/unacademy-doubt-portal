@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const { getUserName } = require('./users');
 
 // Load environment variables from .env
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -23,8 +24,16 @@ const doubtSchema = new mongoose.Schema({
 
 const Doubt = mongoose.model('Doubt', doubtSchema);
 
-const subjects = ['Chemistry', 'Mathematics', 'Physics', 'Botany', 'Zoology'];
+const sampleData = [
+    { rollNumber: '252002210', subject: 'Physics' },
+    { rollNumber: '252006660', subject: 'Mathematics' },
+    { rollNumber: '252005263', subject: 'Chemistry' },
+    { rollNumber: '252005265', subject: 'Botany' },
+    { rollNumber: '252005515', subject: 'Zoology' }
+];
+
 const school = 'Unacademy, Chandigarh';
+const sampleImage = 'https://res.cloudinary.com/demo/image/upload/v1312461204/sample.jpg';
 
 async function seed() {
     try {
@@ -36,11 +45,11 @@ async function seed() {
         await Doubt.deleteMany({});
 
         console.log('Seeding new data...');
-        const doubts = subjects.map(subject => ({
-            studentName: `Sample Student (${subject})`,
+        const doubts = sampleData.map(data => ({
+            studentName: getUserName(data.rollNumber),
             school: school,
-            subject: subject,
-            imagePath: '/uploads/sample.jpg', // Placeholder image path
+            subject: data.subject,
+            imagePath: sampleImage,
             createdAt: new Date()
         }));
 

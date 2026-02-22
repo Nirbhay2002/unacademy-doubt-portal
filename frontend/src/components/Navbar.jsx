@@ -34,11 +34,15 @@ const Navbar = ({ view, setView, isAuthenticated, onLogout, user }) => {
                                     allowScrollButtonsMobile
                                     sx={{ mr: 2 }}
                                 >
-                                    <Tab label="Submit Doubt" value="student" sx={{ fontWeight: 600 }} />
-                                    <Tab label="View Doubts" value="admin" sx={{ fontWeight: 600 }} />
+                                    {(user?.role === 'student' || user?.role === 'admin') && (
+                                        <Tab label="Submit Doubt" value="student" sx={{ fontWeight: 600 }} />
+                                    )}
+                                    {(user?.role === 'teacher' || user?.role === 'admin') && (
+                                        <Tab label="View Doubts" value="admin" sx={{ fontWeight: 600 }} />
+                                    )}
                                 </Tabs>
-                                <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', md: 'block' } }}>
-                                    Role: {user?.rollNumber}
+                                <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', md: 'block' }, textTransform: 'capitalize' }}>
+                                    Role: {user?.role}
                                 </Typography>
                                 <Button variant="outlined" color="primary" onClick={onLogout} size="small">
                                     Logout

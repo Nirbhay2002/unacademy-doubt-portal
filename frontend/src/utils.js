@@ -22,7 +22,6 @@ export const fetchDoubts = async (filters = {}) => {
 
 export const submitDoubt = async (formData, file) => {
     const data = new FormData();
-    data.append('studentName', formData.studentName);
     data.append('school', formData.school);
     data.append('subject', formData.subject);
     data.append('image', file);

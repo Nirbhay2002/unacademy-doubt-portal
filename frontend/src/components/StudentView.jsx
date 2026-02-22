@@ -20,7 +20,6 @@ const SUBJECTS = ['Chemistry', 'Mathematics', 'Physics', 'Botany', 'Zoology'];
 
 const StudentView = () => {
     const [formData, setFormData] = useState({
-        studentName: '',
         school: '',
         subject: ''
     });
@@ -38,7 +37,7 @@ const StudentView = () => {
 
         if (success) {
             alert('Doubt submitted successfully!');
-            setFormData({ studentName: '', school: '', subject: '' });
+            setFormData({ school: '', subject: '' });
             setFile(null);
             e.target.reset();
         } else {
@@ -54,14 +53,6 @@ const StudentView = () => {
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        <TextField
-                            fullWidth
-                            label="Your Name"
-                            value={formData.studentName}
-                            onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                            required
-                        />
-
                         <FormControl fullWidth required>
                             <InputLabel>School</InputLabel>
                             <Select

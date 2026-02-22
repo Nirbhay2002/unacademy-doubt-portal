@@ -17,24 +17,32 @@ function App() {
     useEffect(() => {
         const token = localStorage.getItem('token');
         const rollNumber = localStorage.getItem('rollNumber');
-        if (token && rollNumber) {
+        const role = localStorage.getItem('role');
+        if (token && rollNumber && role) {
             setIsAuthenticated(true);
-            setUser({ rollNumber });
-            setView('student');
+            setUser({ rollNumber, role });
+            // Set initial view based on role
+            if (role === 'student') setView('student');
+            else if (role === 'teacher' || role === 'admin') setView('admin');
         }
     }, []);
 
-    const handleLoginSuccess = (token, rollNumber) => {
+    const handleLoginSuccess = (token, rollNumber, name, role) => {
         localStorage.setItem('token', token);
         localStorage.setItem('rollNumber', rollNumber);
+        localStorage.setItem('role', role);
         setIsAuthenticated(true);
-        setUser({ rollNumber });
-        setView('student'); // Redirect to portal after login
+        setUser({ rollNumber, name, role });
+
+        // Redirect based on role
+        if (role === 'student') setView('student');
+        else if (role === 'teacher' || role === 'admin') setView('admin');
     };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('rollNumber');
+        localStorage.removeItem('role');
         setIsAuthenticated(false);
         setUser(null);
         setView('login');
@@ -50,11 +58,11 @@ function App() {
 
         switch (view) {
             case 'student':
-                return <StudentView />;
+                return user?.role === 'student' || user?.role === 'admin' ? <StudentView /> : setView('admin');
             case 'admin':
-                return <AdminDashboard onZoom={setSelectedImg} />;
+                return user?.role === 'teacher' || user?.role === 'admin' ? <AdminDashboard onZoom={setSelectedImg} /> : setView('student');
             default:
-                return <StudentView />;
+                return user?.role === 'student' ? <StudentView /> : <AdminDashboard onZoom={setSelectedImg} />;
         }
     };
 

@@ -17,7 +17,7 @@ const Login = ({ setView, onLoginSuccess }) => {
         setLoading(false);
 
         if (result.success) {
-            onLoginSuccess(result.data.token, result.data.rollNumber);
+            onLoginSuccess(result.data.token, result.data.rollNumber, result.data.name, result.data.role);
         } else {
             setError(result.error);
         }
