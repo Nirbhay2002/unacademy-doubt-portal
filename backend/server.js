@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const multer = require('multer');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 const dotenv = require('dotenv');
 const cron = require('node-cron');
@@ -15,14 +15,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Log to file helper
+// Log errors to file + console
 const logError = (message, err) => {
     const logEntry = `[${new Date().toISOString()}] ${message}\nError: ${err.message}\nStack: ${err.stack}\n\n`;
     fs.appendFileSync('server_error.log', logEntry);
     console.error(message, err);
 };
 
-// Middleware — explicitly allow Vercel + local origins
+// CORS — explicitly allow Vercel production and all preview URLs
 const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
@@ -42,8 +42,13 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(fileUpload({
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    abortOnLimit: true,
+    useTempFiles: false  // keep files in memory as buffers
+}));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/student-doubts';
@@ -51,7 +56,7 @@ mongoose.connect(MONGODB_URI)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.error('MongoDB Connection Error:', err));
 
-// --- Auth Setup ---
+// Auth Setup
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey123';
 
 const userSchema = new mongoose.Schema({
@@ -62,11 +67,9 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Auth Middleware
 const authMiddleware = (req, res, next) => {
     const token = req.header('Authorization')?.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
-
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded;
@@ -76,7 +79,7 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-// --- Doubt Schema ---
+// Doubt Schema
 const doubtSchema = new mongoose.Schema({
     studentName: String,
     school: String,
@@ -86,7 +89,7 @@ const doubtSchema = new mongoose.Schema({
 });
 const Doubt = mongoose.model('Doubt', doubtSchema);
 
-// --- Cloudinary Setup ---
+// Cloudinary Setup
 const cloudinary = require('cloudinary').v2;
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -94,10 +97,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Use memory storage — file is available as req.file.buffer
-const upload = multer({ storage: multer.memoryStorage() });
-
-// Helper to delete image from Cloudinary by URL
+// Delete image from Cloudinary by its stored URL
 const deleteFromCloudinary = async (imageUrl) => {
     if (!imageUrl) return;
     try {
@@ -163,23 +163,21 @@ app.post('/api/auth/login', async (req, res) => {
 
 // --- Doubt Endpoints ---
 
-// POST /api/doubts — submit a new doubt with image
-app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res) => {
+// POST /api/doubts — submit a doubt with image upload
+app.post('/api/doubts', authMiddleware, async (req, res) => {
     try {
-        if (!req.file) {
+        // express-fileupload attaches uploaded files to req.files
+        if (!req.files || !req.files.image) {
             return res.status(400).json({ error: 'No image file uploaded' });
         }
 
-        // Upload buffer directly to Cloudinary — no stream piping needed
-        const cloudinaryResult = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: 'student-doubts', resource_type: 'auto' },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            );
-            stream.end(req.file.buffer);
+        const imageFile = req.files.image;
+
+        // Upload to Cloudinary using base64 data URI — no streams, no piping
+        const dataUri = `data:${imageFile.mimetype};base64,${imageFile.data.toString('base64')}`;
+        const cloudinaryResult = await cloudinary.uploader.upload(dataUri, {
+            folder: 'student-doubts',
+            resource_type: 'auto'
         });
 
         const { school, subject } = req.body;
@@ -199,7 +197,7 @@ app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res)
     }
 });
 
-// GET /api/doubts — fetch all doubts (with optional school/subject filters)
+// GET /api/doubts — fetch all doubts with optional filters
 app.get('/api/doubts', authMiddleware, async (req, res) => {
     try {
         const { school, subject } = req.query;
@@ -214,18 +212,13 @@ app.get('/api/doubts', authMiddleware, async (req, res) => {
     }
 });
 
-// DELETE /api/doubts/:id — delete a single doubt
+// DELETE /api/doubts/:id
 app.delete('/api/doubts/:id', authMiddleware, async (req, res) => {
     try {
         const doubt = await Doubt.findById(req.params.id);
-        if (!doubt) {
-            return res.status(404).json({ error: 'Doubt not found' });
-        }
+        if (!doubt) return res.status(404).json({ error: 'Doubt not found' });
 
-        if (doubt.imagePath) {
-            await deleteFromCloudinary(doubt.imagePath);
-        }
-
+        if (doubt.imagePath) await deleteFromCloudinary(doubt.imagePath);
         await Doubt.findByIdAndDelete(req.params.id);
         res.json({ message: 'Doubt deleted successfully' });
     } catch (err) {
@@ -233,7 +226,7 @@ app.delete('/api/doubts/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// POST /api/doubts/bulk-delete — delete multiple doubts
+// POST /api/doubts/bulk-delete
 app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
     try {
         const { ids } = req.body;
@@ -243,9 +236,7 @@ app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
 
         const doubtsToDelete = await Doubt.find({ _id: { $in: ids } });
         for (const doubt of doubtsToDelete) {
-            if (doubt.imagePath) {
-                await deleteFromCloudinary(doubt.imagePath);
-            }
+            if (doubt.imagePath) await deleteFromCloudinary(doubt.imagePath);
         }
 
         const result = await Doubt.deleteMany({ _id: { $in: ids } });
@@ -255,9 +246,9 @@ app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
     }
 });
 
-// Global Error Handler (catches errors forwarded via next(err))
+// Global Error Handler
 app.use((err, req, res, next) => {
-    logError('Global Error Handler caught an error:', err);
+    logError('Global Error Handler:', err);
     res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 

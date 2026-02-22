@@ -12,7 +12,7 @@ async function test() {
 
         const formData = new FormData();
         formData.append('school', 'Test Diag School');
-        formData.append('subject', 'Chemistry');
+        formData.append('subject', 'Biology');
 
         const imagePath = 'C:\\Users\\Admin\\.gemini\\antigravity\\brain\\e9592b3a-b3a0-4248-9f32-227205745a3b\\verify_seed_data_1771776007588.webp';
         const fileBuffer = fs.readFileSync(imagePath);
