@@ -70,8 +70,8 @@ const doubtSchema = new mongoose.Schema({
 
 const Doubt = mongoose.model('Doubt', doubtSchema);
 
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
+const { Readable } = require('stream');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -79,15 +79,24 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'student-doubts',
-        resource_type: 'auto'
+// Custom multer storage engine - uploads directly to Cloudinary
+const cloudinaryStorage = {
+    _handleFile(req, file, cb) {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: 'student-doubts', resource_type: 'auto' },
+            (error, result) => {
+                if (error) return cb(error);
+                cb(null, { path: result.secure_url, filename: result.public_id });
+            }
+        );
+        file.stream.pipe(uploadStream);
     },
-});
+    _removeFile(req, file, cb) {
+        cloudinary.uploader.destroy(file.filename, cb);
+    }
+};
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage: cloudinaryStorage });
 
 const deleteFromCloudinary = async (imageUrl) => {
     if (!imageUrl) return;
