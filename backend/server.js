@@ -17,21 +17,20 @@ const PORT = process.env.PORT || 5000;
 
 // Log to file helper
 const logError = (message, err) => {
-    const logEntry = `[${new Date().toISOString()}] ${message}\nError: ${err.message}\nStack: ${err.stack}\nDetails: ${JSON.stringify(err)}\n\n`;
+    const logEntry = `[${new Date().toISOString()}] ${message}\nError: ${err.message}\nStack: ${err.stack}\n\n`;
     fs.appendFileSync('server_error.log', logEntry);
     console.error(message, err);
 };
 
-// Middleware
+// Middleware — explicitly allow Vercel + local origins
 const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'https://unacademy-doubt-portal.vercel.app',
-    /^https:\/\/unacademy-doubt-portal.*\.vercel\.app$/  // Allow all Vercel preview URLs
+    /^https:\/\/unacademy-doubt-portal.*\.vercel\.app$/
 ];
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Postman, etc.)
         if (!origin) return callback(null, true);
         const allowed = ALLOWED_ORIGINS.some(o =>
             typeof o === 'string' ? o === origin : o.test(origin)
@@ -76,9 +75,8 @@ const authMiddleware = (req, res, next) => {
         res.status(400).json({ error: 'Invalid token.' });
     }
 };
-// ------------------
 
-// Doubt Schema
+// --- Doubt Schema ---
 const doubtSchema = new mongoose.Schema({
     studentName: String,
     school: String,
@@ -86,37 +84,20 @@ const doubtSchema = new mongoose.Schema({
     imagePath: String,
     createdAt: { type: Date, default: Date.now }
 });
-
 const Doubt = mongoose.model('Doubt', doubtSchema);
 
+// --- Cloudinary Setup ---
 const cloudinary = require('cloudinary').v2;
-const { Readable } = require('stream');
-
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Custom multer storage engine - uploads directly to Cloudinary
-const cloudinaryStorage = {
-    _handleFile(req, file, cb) {
-        const uploadStream = cloudinary.uploader.upload_stream(
-            { folder: 'student-doubts', resource_type: 'auto' },
-            (error, result) => {
-                if (error) return cb(error);
-                cb(null, { path: result.secure_url, filename: result.public_id });
-            }
-        );
-        file.stream.pipe(uploadStream);
-    },
-    _removeFile(req, file, cb) {
-        cloudinary.uploader.destroy(file.filename, cb);
-    }
-};
+// Use memory storage — file is available as req.file.buffer
+const upload = multer({ storage: multer.memoryStorage() });
 
-const upload = multer({ storage: cloudinaryStorage });
-
+// Helper to delete image from Cloudinary by URL
 const deleteFromCloudinary = async (imageUrl) => {
     if (!imageUrl) return;
     try {
@@ -169,29 +150,46 @@ app.post('/api/auth/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(400).json({ error: 'Invalid roll number or password.' });
 
-        const token = jwt.sign({ _id: user._id, rollNumber: user.rollNumber, name: user.name, role: user.role }, JWT_SECRET, { expiresIn: '12h' });
+        const token = jwt.sign(
+            { _id: user._id, rollNumber: user.rollNumber, name: user.name, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '12h' }
+        );
         res.json({ token, rollNumber: user.rollNumber, name: user.name, role: user.role });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
-// -----------------------
 
-// API Endpoints
+// --- Doubt Endpoints ---
+
+// POST /api/doubts — submit a new doubt with image
 app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res) => {
     try {
-        const { school, subject } = req.body;
-        const studentName = req.user.name || getUserName(req.user.rollNumber);
-
         if (!req.file) {
             return res.status(400).json({ error: 'No image file uploaded' });
         }
+
+        // Upload buffer directly to Cloudinary — no stream piping needed
+        const cloudinaryResult = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: 'student-doubts', resource_type: 'auto' },
+                (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                }
+            );
+            stream.end(req.file.buffer);
+        });
+
+        const { school, subject } = req.body;
+        const studentName = req.user.name || getUserName(req.user.rollNumber);
 
         const doubt = new Doubt({
             studentName,
             school,
             subject,
-            imagePath: req.file.path
+            imagePath: cloudinaryResult.secure_url
         });
         await doubt.save();
         res.status(201).json({ message: 'Doubt uploaded successfully', doubt });
@@ -201,6 +199,7 @@ app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res)
     }
 });
 
+// GET /api/doubts — fetch all doubts (with optional school/subject filters)
 app.get('/api/doubts', authMiddleware, async (req, res) => {
     try {
         const { school, subject } = req.query;
@@ -215,7 +214,7 @@ app.get('/api/doubts', authMiddleware, async (req, res) => {
     }
 });
 
-// Delete Single Doubt
+// DELETE /api/doubts/:id — delete a single doubt
 app.delete('/api/doubts/:id', authMiddleware, async (req, res) => {
     try {
         const doubt = await Doubt.findById(req.params.id);
@@ -234,7 +233,7 @@ app.delete('/api/doubts/:id', authMiddleware, async (req, res) => {
     }
 });
 
-// Bulk Delete Doubts
+// POST /api/doubts/bulk-delete — delete multiple doubts
 app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
     try {
         const { ids } = req.body;
@@ -243,7 +242,6 @@ app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
         }
 
         const doubtsToDelete = await Doubt.find({ _id: { $in: ids } });
-
         for (const doubt of doubtsToDelete) {
             if (doubt.imagePath) {
                 await deleteFromCloudinary(doubt.imagePath);
@@ -257,27 +255,21 @@ app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
     }
 });
 
-// Global Error Handler
+// Global Error Handler (catches errors forwarded via next(err))
 app.use((err, req, res, next) => {
     logError('Global Error Handler caught an error:', err);
-    res.status(500).json({
-        error: err.message || 'Internal Server Error',
-        details: process.env.NODE_ENV === 'development' ? err : undefined
-    });
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// Weekly Cleanup: Every Sunday at Midnight (0 0 * * 0)
+// Weekly Cleanup: Every Sunday at Midnight
 cron.schedule('0 0 * * 0', async () => {
     console.log('Running weekly cleanup...');
     try {
-        // 1. Delete all database records
         await Doubt.deleteMany({});
-
-        // 2. Delete all images from Cloudinary folder 'student-doubts'
         try {
             await cloudinary.api.delete_resources_by_prefix('student-doubts/');
         } catch (cloudinaryErr) {
