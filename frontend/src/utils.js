@@ -45,7 +45,7 @@ export const submitDoubt = async (formData, file) => {
 
 export const downloadImage = async (imagePath, fileName) => {
     try {
-        const response = await fetch(`${SERVER_BASE}${imagePath}`);
+        const response = await fetch(imagePath);
         const blobData = await response.blob();
         const url = window.URL.createObjectURL(blobData);
         const link = document.createElement('a');
@@ -57,7 +57,7 @@ export const downloadImage = async (imagePath, fileName) => {
         window.URL.revokeObjectURL(url);
     } catch (err) {
         console.error('Download failed:', err);
-        window.open(`${SERVER_BASE}${imagePath}`, '_blank');
+        window.open(imagePath, '_blank');
     }
 };
 

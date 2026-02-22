@@ -83,23 +83,36 @@ const doubtSchema = new mongoose.Schema({
 
 const Doubt = mongoose.model('Doubt', doubtSchema);
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'student-doubts',
+        allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
     },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
 });
 
 const upload = multer({ storage: storage });
+
+const deleteFromCloudinary = async (imageUrl) => {
+    if (!imageUrl) return;
+    try {
+        const parts = imageUrl.split('/');
+        const filename = parts[parts.length - 1];
+        const publicId = `student-doubts/${filename.split('.')[0]}`;
+        await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+        console.error('Error deleting from Cloudinary:', err);
+    }
+};
 
 // --- Auth Endpoints ---
 app.post('/api/auth/signup', async (req, res) => {
@@ -151,7 +164,7 @@ app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res)
             studentName,
             school,
             subject,
-            imagePath: req.file ? `/uploads/${req.file.filename}` : ''
+            imagePath: req.file ? req.file.path : ''
         });
         await doubt.save();
         res.status(201).json({ message: 'Doubt uploaded successfully', doubt });
@@ -183,10 +196,7 @@ app.delete('/api/doubts/:id', authMiddleware, async (req, res) => {
         }
 
         if (doubt.imagePath) {
-            const filePath = path.join(__dirname, doubt.imagePath);
-            fs.unlink(filePath, (err) => {
-                if (err && err.code !== 'ENOENT') console.error('Error deleting image file:', err);
-            });
+            await deleteFromCloudinary(doubt.imagePath);
         }
 
         await Doubt.findByIdAndDelete(req.params.id);
@@ -206,14 +216,11 @@ app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
 
         const doubtsToDelete = await Doubt.find({ _id: { $in: ids } });
 
-        doubtsToDelete.forEach(doubt => {
+        for (const doubt of doubtsToDelete) {
             if (doubt.imagePath) {
-                const filePath = path.join(__dirname, doubt.imagePath);
-                fs.unlink(filePath, (err) => {
-                    if (err && err.code !== 'ENOENT') console.error('Error deleting image file:', err);
-                });
+                await deleteFromCloudinary(doubt.imagePath);
             }
-        });
+        }
 
         const result = await Doubt.deleteMany({ _id: { $in: ids } });
         res.json({ message: `Successfully deleted ${result.deletedCount} doubts` });
@@ -233,16 +240,12 @@ cron.schedule('0 0 * * 0', async () => {
         // 1. Delete all database records
         await Doubt.deleteMany({});
 
-        // 2. Delete all files in uploads/ folder
-        const directory = path.join(__dirname, 'uploads');
-        fs.readdir(directory, (err, files) => {
-            if (err) return console.error('Error reading uploads directory for cleanup:', err);
-            for (const file of files) {
-                fs.unlink(path.join(directory, file), err => {
-                    if (err) console.error(`Failed to delete file ${file}:`, err);
-                });
-            }
-        });
+        // 2. Delete all images from Cloudinary folder 'student-doubts'
+        try {
+            await cloudinary.api.delete_resources_by_prefix('student-doubts/');
+        } catch (cloudinaryErr) {
+            console.error('Error clearing Cloudinary folder:', cloudinaryErr);
+        }
         console.log('Weekly cleanup successful.');
     } catch (err) {
         console.error('Cleanup error:', err);

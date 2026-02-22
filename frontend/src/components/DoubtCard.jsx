@@ -28,10 +28,10 @@ const DoubtCard = ({ doubt, onZoom, onDelete, onSelect, isSelected }) => {
                     color="primary"
                 />
             </Box>
-            <Box sx={{ position: 'relative', pt: '60%', cursor: 'pointer', backgroundColor: '#f0f2f5' }} onClick={() => onZoom(`${SERVER_BASE}${doubt.imagePath}`)}>
+            <Box sx={{ position: 'relative', pt: '60%', cursor: 'pointer', backgroundColor: '#f0f2f5' }} onClick={() => onZoom(doubt.imagePath)}>
                 <CardMedia
                     component="img"
-                    image={`${SERVER_BASE}${doubt.imagePath}`}
+                    image={doubt.imagePath}
                     alt="Doubt Image"
                     sx={{
                         position: 'absolute',
