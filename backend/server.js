@@ -83,6 +83,12 @@ const doubtSchema = new mongoose.Schema({
 
 const Doubt = mongoose.model('Doubt', doubtSchema);
 
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 // Multer Storage Configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
