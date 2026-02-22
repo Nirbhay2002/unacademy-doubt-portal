@@ -76,7 +76,7 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'student-doubts',
-        allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
+        resource_type: 'auto'
     },
 });
 
@@ -148,11 +148,15 @@ app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res)
         const { school, subject } = req.body;
         const studentName = req.user.name || getUserName(req.user.rollNumber);
 
+        if (!req.file) {
+            return res.status(400).json({ error: 'No image file uploaded' });
+        }
+
         const doubt = new Doubt({
             studentName,
             school,
             subject,
-            imagePath: req.file ? req.file.path : ''
+            imagePath: req.file.path
         });
         await doubt.save();
         res.status(201).json({ message: 'Doubt uploaded successfully', doubt });
