@@ -8,11 +8,11 @@ async function test() {
         });
         const { token } = await loginRes.json();
         if (!token) { console.error('Login failed'); return; }
-        console.log('Login OK');
+        console.log('✅ Login OK');
 
         const formData = new FormData();
-        formData.append('school', 'Test Diag School');
-        formData.append('subject', 'Biology');
+        formData.append('school', 'Refactor Diag School');
+        formData.append('subject', 'Maths');
 
         const imagePath = 'C:\\Users\\Admin\\.gemini\\antigravity\\brain\\e9592b3a-b3a0-4248-9f32-227205745a3b\\verify_seed_data_1771776007588.webp';
         const fileBuffer = fs.readFileSync(imagePath);
@@ -26,8 +26,8 @@ async function test() {
         });
         const data = await submitRes.json();
         console.log('Status:', submitRes.status);
-        if (submitRes.ok) console.log('SUCCESS - Cloudinary URL:', data.doubt?.imagePath);
-        else console.error('FAILED:', data.error);
+        if (submitRes.ok) console.log('✅ SUCCESS - URL:', data.doubt?.imagePath);
+        else console.error('❌ FAILED:', data.error);
     } catch (err) { console.error('Error:', err.message); }
 }
 test();
