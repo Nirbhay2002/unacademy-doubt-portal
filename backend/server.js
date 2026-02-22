@@ -15,6 +15,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Log to file helper
+const logError = (message, err) => {
+    const logEntry = `[${new Date().toISOString()}] ${message}\nError: ${err.message}\nStack: ${err.stack}\nDetails: ${JSON.stringify(err)}\n\n`;
+    fs.appendFileSync('server_error.log', logEntry);
+    console.error(message, err);
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -161,6 +168,7 @@ app.post('/api/doubts', authMiddleware, upload.single('image'), async (req, res)
         await doubt.save();
         res.status(201).json({ message: 'Doubt uploaded successfully', doubt });
     } catch (err) {
+        logError('Error in POST /api/doubts:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -219,6 +227,15 @@ app.post('/api/doubts/bulk-delete', authMiddleware, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    logError('Global Error Handler caught an error:', err);
+    res.status(500).json({
+        error: err.message || 'Internal Server Error',
+        details: process.env.NODE_ENV === 'development' ? err : undefined
+    });
 });
 
 app.listen(PORT, () => {
